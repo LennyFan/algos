@@ -108,12 +108,31 @@ def calculate_distances(graph, starting_vertex):
 
     while len(pq) > 0:
         current_distance, current_vertex = heapq.heappop(pq)
+      
+        # Oct, 18, 2017 Edit
+        # the vertex which had already been removed from the heap
+        # we name it <remove>
+        # reference: https://docs.python.org/2/library/heapq.html 
+        #            8.4.2
+        if current_vertex == "<remove>":
+            continue
 
         for neighbor, neighbor_distance in graph[current_vertex].items():
             distance = distances[current_vertex] + neighbor_distance
             if distance < distances[neighbor]:
+                
+                # Oct, 18, 2017 Edit
+                # update the vertex name in entry_lookup & pq to <remove>
+                # remove the item from entry_lookup
+                entry_lookup[neighbor][1] = "<remove>"
+                entry_lookup.pop(neighbor)
+                
+                # Oct, 18, 2017 Edit
+                # update the distance
+                # then push it to the heap
                 distances[neighbor] = distance
-                entry_lookup[neighbor][0] = distance
+                entry_lookup[neighbor] = [distance,  neighbor]
+                heapq.heappush(pq, entry_lookup[neighbor])
 
     return distances
 
@@ -129,6 +148,19 @@ example_graph = {
 # calculate_distances(example_graph, 'X')
 # => {'U': 1, 'W': 2, 'V': 2, 'Y': 1, 'X': 0, 'Z': 2}
 
+
+# Oct, 18, 2017 Edit
+example_graph = {
+    'B': {'A': 9},
+    'U': {'V': 2, 'W': 5, 'X': 1},
+    'V': {'U': 2, 'X': 2, 'W': 3},
+    'W': {'V': 3, 'U': 5, 'X': 3, 'Y': 1, 'A': 5},
+    'X': {'U': 1, 'V': 2, 'W': 3, 'Y': 1},
+    'Y': {'X': 1, 'W': 1, 'A': 1},
+    'A': {'W': 5, 'Y': 1, 'B':9}
+}
+# calculate_distances(example_graph, 'X')
+# => {'A': 2, 'B': 11, 'U': 1, 'V': 2, 'W': 2, 'X': 0, 'Y': 1}
 """
 Dijkstra’s algorithm uses a priority queue, which we introduced in the
 trees chapter and which we achieve here using Python’s `heapq` module.
